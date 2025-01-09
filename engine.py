@@ -10,8 +10,7 @@ from game_map import GameMap
 from input_handlers import EventHandler
 
 class Engine:
-    def __init__(self, entities:Set[Entity], event_handler:EventHandler, map:GameMap, player:Entity):
-        self.entities = entities
+    def __init__(self, event_handler:EventHandler, map:GameMap, player:Entity):
         self.event_handler = event_handler
         self.player = player
         self.map = map
@@ -25,16 +24,16 @@ class Engine:
                 continue
 
             action.perform(self, self.player)
-
+            self.handle_enemy_turns()
             self.update_fov()
+
+    def handle_enemy_turns(self) -> None:
+        for entity in self.map.entities - {self.player}:
+            print(f'The entity {entity.name} wonders when it will get to take a real turn')
 
     def render(self, console:Console, context:Context) -> None:
         self.map.render(console)
         
-        for entity in self.entities:
-            if self.map.visible[entity.x, entity.y]:
-                console.print(entity.x, entity.y, entity.char, fg=entity.color)
-
         context.present(console)
 
         console.clear()
