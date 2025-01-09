@@ -4,15 +4,58 @@ from typing import Optional, TYPE_CHECKING
 
 import tcod.event
 
-from actions import Action, EscapeAction, BumpAction
+from actions import Action, EscapeAction, BumpAction, WaitAction
 
 if TYPE_CHECKING:
     from engine import Engine
+
+MOVE_KEYS = {
+    #arrow keys
+    tcod.event.KeySym.UP: (0, -1),
+    tcod.event.KeySym.DOWN: (0, 1),
+    tcod.event.KeySym.LEFT: (-1, 0),
+    tcod.event.KeySym.RIGHT: (1, 0),
+    tcod.event.KeySym.HOME: (-1, -1),
+    tcod.event.KeySym.END: (-1, 1),
+    tcod.event.KeySym.PAGEUP: (1, -1),
+    tcod.event.KeySym.PAGEDOWN: (1, 1),
+    #numpad
+    tcod.event.KeySym.KP_1:(-1,1),
+    tcod.event.KeySym.KP_2:(0,1),
+    tcod.event.KeySym.KP_3:(1,1),
+    tcod.event.KeySym.KP_4:(-1,0),
+    tcod.event.KeySym.KP_6:(1,0),
+    tcod.event.KeySym.KP_7:(-1,-1),
+    tcod.event.KeySym.KP_8:(0,-1),
+    tcod.event.KeySym.KP_9:(1,-1),
+    #vi keys
+    tcod.event.K_h: (-1, 0),
+    tcod.event.K_j: (0, 1),
+    tcod.event.K_k: (0, -1),
+    tcod.event.K_l: (1, 0),
+    tcod.event.K_y: (-1, -1),
+    tcod.event.K_u: (1, -1),
+    tcod.event.K_b: (-1, 1),
+    tcod.event.K_n: (1, 1),
+}
+
+WAIT_KEYS = {
+    tcod.event.KeySym.PERIOD,
+    tcod.event.KeySym.KP_5,
+    tcod.event.KeySym.CLEAR
+}
 
 class EventHandler(tcod.event.EventDispatch[Action]):
     def __init__(self, engine:Engine):
         self.engine = engine
 
+    def handle_events(self) -> None:
+        raise NotImplementedError
+    
+    def ev_quit(self, event: tcod.event.Quit) -> Optional[Action]:
+        raise SystemExit
+
+class MainGameEventHandler(EventHandler):
     def handle_events(self) -> None:
         for event in tcod.event.wait():
             action = self.dispatch(event)
@@ -24,10 +67,7 @@ class EventHandler(tcod.event.EventDispatch[Action]):
 
             self.engine.handle_enemy_turns()
             self.engine.update_fov()
-    
-    def ev_quit(self, event: tcod.event.Quit) -> Optional[Action]:
-        raise SystemExit
-    
+
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[Action]:
         action: Optional[Action] = None
 
@@ -35,17 +75,33 @@ class EventHandler(tcod.event.EventDispatch[Action]):
 
         player = self.engine.player
 
-        if key == tcod.event.KeySym.UP:
-            action = BumpAction(player, 0, -1)
-        elif key == tcod.event.KeySym.DOWN:
-            action = BumpAction(player, 0, 1)
-        elif key == tcod.event.KeySym.LEFT:
-            action = BumpAction(player, -1, 0)
-        elif key == tcod.event.KeySym.RIGHT:
-            action = BumpAction(player, 1, 0)
-
+        if key in MOVE_KEYS:
+            dx, dy = MOVE_KEYS[key]
+            action = BumpAction(player, dx, dy)
+        elif key in WAIT_KEYS:
+            action = WaitAction(player)
         elif key == tcod.event.KeySym.ESCAPE:
             action = EscapeAction(player)
 
         #no valid input
+        return action
+    
+class GameOverEventHandler(EventHandler):
+    def handle_events(self):
+        for event in tcod.event.wait():
+            action = self.dispatch(event=event)
+
+            if action is None:
+                continue
+            
+            action.perform()
+
+    def ev_keydown(self, event):
+        action: Optional[Action] = None
+
+        key = event.sym
+
+        if key == tcod.event.KeySym.ESCAPE:
+            action = EscapeAction(self.engine.player)
+
         return action
