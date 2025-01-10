@@ -13,7 +13,7 @@ class BaseAI(Action):
     entity:Actor
 
     def perform(self):
-        raise NotImplementedError
+        raise NotImplementedError()
     
     def get_path_to(self, dest_x, dest_y) -> List[Tuple[int,int]]:
         """Compute and return a path to the target position.

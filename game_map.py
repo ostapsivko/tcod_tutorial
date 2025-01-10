@@ -4,13 +4,13 @@ from typing import Iterable, TYPE_CHECKING, Iterator, Optional
 
 import numpy as np #type:ignore
 from tcod.console import Console
-from entity import Actor
+from entity import Actor, Item
 
 import tile_types
 
 if TYPE_CHECKING:
     from engine import Engine
-    from entity import Entity
+    from entity import Entity 
 
 class GameMap:
     def __init__(
@@ -42,6 +42,10 @@ class GameMap:
     @property
     def map(self) -> GameMap:
         return self
+
+    @property
+    def items(self) -> Iterator[Item]:
+        yield from (entity for entity in self.entities if isinstance(entity, Item))
 
     def get_blocking_entity_at(
             self, location_x:int, location_y:int
