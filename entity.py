@@ -16,7 +16,7 @@ class Entity:
     """
     A generic object to represent player, enemy, item etc.
     """
-    map: GameMap
+    parent: GameMap
 
     def __init__(
             self,
@@ -38,9 +38,13 @@ class Entity:
         self.render_order = render_order
 
         if map:
-            self.map = map
+            self.parent = map
             map.entities.add(self)
 
+
+    @property
+    def map(self) -> GameMap:
+        return self.parent.map
 
     def move(self, dx:int, dy:int) -> None:
         self.x += dx
@@ -52,7 +56,7 @@ class Entity:
         clone = copy.deepcopy(self)
         clone.x = x
         clone.y = y
-        clone.map = gamemap
+        clone.parent = gamemap
         gamemap.entities.add(clone)
         return clone
     
@@ -61,9 +65,10 @@ class Entity:
         self.x = x
         self.y = y
         if map:
-            if hasattr(self, "map"):
-                self.map.entities.remove(self)
-            self.map = map
+            if hasattr(self, "parent"):
+                if self.parent is self.map:
+                    self.map.entities.remove(self)
+            self.parent = map
             map.entities.add(self)
 
 class Actor(Entity):
@@ -82,7 +87,7 @@ class Actor(Entity):
         self.ai:Optional[BaseAI] = ai_cls(self)
 
         self.fighter = fighter
-        self.fighter.entity = self
+        self.fighter.parent = self
 
     @property
     def is_alive(self) -> bool:
