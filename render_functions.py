@@ -13,7 +13,7 @@ def get_names_at(x:int, y:int, map:GameMap) -> str:
     if not map.in_bounds(x, y) or not map.visible[x, y]:
         return ""
     
-    names = " ,".join(
+    names = ", ".join(
         entity.name for entity in map.entities if entity.x == x and entity.y == y
     )
 
