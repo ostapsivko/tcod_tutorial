@@ -147,3 +147,13 @@ class PickupAction(Action):
 class DropAction(ItemAction):
     def perform(self):
         self.entity.inventory.drop(self.item)
+
+class TakeStairsAction(Action):
+    def perform(self):
+        if (self.entity.x, self.entity.y) == self.engine.map.downstairs_location:
+            self.engine.world.generate_floor()
+            self.engine.message_log.add_message(
+                "You descended the staircase.", color.descend
+            )
+        else:
+            raise exceptions.Impossible("There are no stairs here.")

@@ -13,7 +13,7 @@ import color
 from engine import Engine
 import entity_factories
 import input_handlers
-from procgen import generate_dungeon
+from game_map import GameWorld
 
 background_image = tcod.image.load("menu_background.png")[:,:,:3]
 
@@ -32,16 +32,18 @@ def new_game() -> Engine:
 
     engine = Engine(player)
 
-    engine.map = generate_dungeon(
+    engine.world = GameWorld(
+        engine=engine,
         max_rooms=max_rooms, 
         room_min_size=room_min_size, 
         room_max_size=room_max_size, 
         map_width=map_width, 
         map_height=map_height, 
         max_monsters_per_room=max_monsters_per_room,
-        max_items_per_room=max_items_per_room, 
-        engine=engine)
+        max_items_per_room=max_items_per_room,
+        )
     
+    engine.world.generate_floor()
     engine.update_fov()
 
     engine.message_log.add_message("Hello and welcome, adventurer, to yet another dungeon!", color.welcome_text)
